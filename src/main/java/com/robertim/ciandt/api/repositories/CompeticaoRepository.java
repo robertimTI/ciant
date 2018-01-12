@@ -1,8 +1,8 @@
 package com.robertim.ciandt.api.repositories;
 
-import java.util.Date;
 import java.util.List;
 
+import org.joda.time.LocalDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,15 +19,18 @@ import com.robertim.ciandt.api.entities.Competicao;
 @Repository
 public interface CompeticaoRepository  extends JpaRepository<Competicao, Long>{
  
-	Competicao findByDataInicial(Date data);
+	Competicao findByDataInicial(String data);
 	
-	List<Competicao> findByDataInicialAndLocal(Date data,String local);
+	List<Competicao> findByDataInicialAndLocal(LocalDate data,String local);
 	
-	@Query("SELECT comp FROM Competicao comp WHERE comp.dataInicial like :data AND comp.local = :local")
-	List<Competicao> findByData(@Param("data")Date data ,@Param("local")String local);
+	@Query("SELECT comp FROM Competicao comp WHERE comp.dataInicial like CONCAT(:data,'%') AND comp.local = :local")
+	List<Competicao> findByData(@Param("data")String data ,@Param("local")String local);
 	
 	Page<Competicao> findByModalidade(String modalidade,Pageable pageable);
 	
 	Page<Competicao> findAll(Pageable pageable);
+	
+	@Query("SELECT comp FROM Competicao comp WHERE comp.dataInicial like CONCAT(:data,'%')")
+	List<Competicao> findAllByData(@Param("data")String data);
 }
 

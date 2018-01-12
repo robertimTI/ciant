@@ -4,12 +4,14 @@ import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
 import org.apache.commons.lang3.EnumUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.joda.time.Interval;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
@@ -48,7 +50,6 @@ public class CompeticaoController {
 	@Value("${paginacao.qtd_por_pagina}")
     private int qtdPorPagina;
 	private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	private final SimpleDateFormat dateFormatSearch = new SimpleDateFormat("yyyy-MM-dd");
 	public CompeticaoController() {
 	}
 	
@@ -107,6 +108,7 @@ public class CompeticaoController {
         Page<CompeticaoDto> competicaoDto = competicoes.map(competicao -> this.converterCompeticaoDto(competicao));
         
         response.setData(competicaoDto);
+        
         return ResponseEntity.ok(response);
     }
     /**
@@ -124,36 +126,64 @@ public class CompeticaoController {
         				competicaoDto.getEtapa().toString().equals(EtapaEnum.QUARTAS_FINAL.toString()))) {
         	if((competicaoDto.getAdversario().equals(competicaoDto.getVisitante()))) {
         		result.addError(new ObjectError("competicao", "O adversário somente podem ser iguais em semi-finais e finais."));
+        		return;
         	}
         }
         
         DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
         DateTime startDate = formatter.parseDateTime(competicaoDto.getDataInicial());
         DateTime endDate = formatter.parseDateTime(competicaoDto.getDataFinal());
+        if(startDate.isBeforeNow() || endDate.isBeforeNow()) {
+        	result.addError(new ObjectError("competicao", "A data e hora inserida não pode ser anterior à atual"));
+        	return;
+        }else if(endDate.isBefore(startDate)) {
+        	result.addError(new ObjectError("competicao", "A data e hora final não pode ser anterior à data e hora inicial"));
+        	return;
+        }
         Duration duration = new Duration(startDate,endDate);
         if(duration.getStandardMinutes()<30) {
         	System.out.println("Duração da partida deve ser no mínimo de 30 minutos.");
         	result.addError(new ObjectError("competicao", "Duração da partida deve ser no mínimo de 30 minutos."));
+        	return;
         }
         
-        /* Optional<List<Competicao>> competicao;
-        DateTime formattedTime = formatter.parseDateTime(competicaoDto.getDataInicial());
+        Optional<List<Competicao>> competicao;
         DateTimeFormatter dtfOut = DateTimeFormat.forPattern("yyyy-MM-dd");
-        log.info("Printando a data: {}", dtfOut.print(formattedTime));
-        
-        
-			//competicao = this.competicaoService.buscarPorDataInicialAndLocal(this.dateFormatSearch.parse(competicaoDto.getDataInicial()), competicaoDto.getLocal());
 			try {
 				
-				competicao = this.competicaoService.buscarPorData(formattedTime, competicaoDto.getLocal());
+				competicao = this.competicaoService.buscarPorData(dtfOut.print(startDate) , competicaoDto.getLocal());
 				List<Competicao> competicaoLocalData = competicao.get();
 				 if(competicaoLocalData.size()>4) {
 					 System.out.println("Maximo de 4 partidas por dia");
+					 result.addError(new ObjectError("competicao", "O número máximo de competições por dia é 4 no mesmo local e na mesma data."));
+					 return;
 				 }
+				 if(competicaoLocalData.size()>0) {
+					
+					 for(Competicao comp : competicaoLocalData) {
+						 CompeticaoDto compDTO = this.converterCompeticaoDto(comp);
+						 DateTime dataInicial = formatter.parseDateTime(compDTO.getDataInicial());
+						 DateTime dataFinal = formatter.parseDateTime(compDTO.getDataFinal());
+						 DateTime dataInicialTest = formatter.parseDateTime(competicaoDto.getDataInicial());
+						 DateTime dataFinalTest = formatter.parseDateTime(competicaoDto.getDataFinal());
+						 Interval interval = new Interval(dataInicial,dataFinal);
+						 if(interval.contains(dataInicialTest)) {
+							 System.out.println("Nao é possivel iniciar nesta data");
+							 result.addError(new ObjectError("competicao", "Nao é possivel iniciar nesta data , tente outro horario"));
+							 return;
+						 }
+						 if(interval.contains(dataFinalTest)) {
+							 System.out.println("Nao é possivel finalizar no intervalo de uma partida com outra em andamento");
+							 result.addError(new ObjectError("competicao", "Nao é possivel finalizar nesta data , tente outro horario"));
+							 return;
+						 }
+					 }
+				 }
+				 
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}*/
+			}
         
     }
     private Competicao converterDtoParaCompeticao(CompeticaoDto competicaoDto, BindingResult result)

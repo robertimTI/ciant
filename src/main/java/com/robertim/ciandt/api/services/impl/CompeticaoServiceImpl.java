@@ -1,15 +1,14 @@
 package com.robertim.ciandt.api.services.impl;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.robertim.ciandt.api.entities.Competicao;
@@ -24,7 +23,7 @@ public class CompeticaoServiceImpl implements CompeticaoService{
     private CompeticaoRepository competicaoRepository;
 	
 	@Override
-	public Optional<Competicao> buscarPorDataInicial(Date data) {
+	public Optional<Competicao> buscarPorDataInicial(String data) {
 		log.info("Buscando uma data inicial {}", data);
 		return Optional.ofNullable(competicaoRepository.findByDataInicial(data));
 	}
@@ -37,13 +36,13 @@ public class CompeticaoServiceImpl implements CompeticaoService{
 	}
 
 	@Override
-	public Optional<List<Competicao>> buscarPorDataInicialAndLocal(Date data, String local) {
+	public Optional<List<Competicao>> buscarPorDataInicialAndLocal(LocalDate data, String local) {
 		log.info("Buscando por data e local: {} , {}", data,local);
 		return Optional.ofNullable(competicaoRepository.findByDataInicialAndLocal(data, local));
 	}
 
 	@Override
-	public Optional<List<Competicao>> buscarPorData(Date data, String local) {
+	public Optional<List<Competicao>> buscarPorData(String data, String local) {
 		log.info("Buscando por data e local: {} , {}", data,local);
 		return Optional.ofNullable(competicaoRepository.findByData(data, local));
 	}
@@ -58,5 +57,11 @@ public class CompeticaoServiceImpl implements CompeticaoService{
 	public Page<Competicao> buscarTodos(PageRequest pageRequest) {
 		 log.info("Buscando todos");
 		return this.competicaoRepository.findAll(pageRequest);
+	}
+
+	@Override
+	public Optional<List<Competicao>> buscarTodosPorData(String data) {
+		 log.info("Buscando todos por data busca refinada");
+		return Optional.ofNullable(this.competicaoRepository.findAllByData(data));
 	}
 }

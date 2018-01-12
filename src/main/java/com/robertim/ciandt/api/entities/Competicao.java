@@ -82,6 +82,7 @@ public class Competicao implements Serializable{
 		public void setDataInicial(Date dataInicial) {
 			this.dataInicial = dataInicial;
 		}
+		
 		@Temporal(TemporalType.TIMESTAMP)
 		@Column(name = "data_final", nullable = false)
 		public Date getDataFinal() {
@@ -99,11 +100,13 @@ public class Competicao implements Serializable{
 		public void setEtapa(EtapaEnum etapa) {
 			this.etapa = etapa;
 		}
-
+	 
 		@Override
 		public String toString() {
 			return "Competicao [id=" + id + ", visitante=" + visitante + ", adversario=" + adversario + ", local="
 					+ local + ", modalidade=" + modalidade + ", dataInicial=" + dataInicial + ", dataFinal=" + dataFinal
-					+ ", etapa=" + etapa + "]";
-		}	    
+					+  ", etapa=" + etapa + "]";
+		}
+
+		   
 }
