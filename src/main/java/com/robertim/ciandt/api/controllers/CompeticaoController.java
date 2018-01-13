@@ -152,7 +152,11 @@ public class CompeticaoController {
 			try {
 				
 				competicao = this.competicaoService.buscarPorData(dtfOut.print(startDate) , competicaoDto.getLocal());
+				if(competicao!=null) {
+					
+				
 				List<Competicao> competicaoLocalData = competicao.get();
+				if(competicaoLocalData!=null) {
 				 if(competicaoLocalData.size()>4) {
 					 System.out.println("Maximo de 4 partidas por dia");
 					 result.addError(new ObjectError("competicao", "O número máximo de competições por dia é 4 no mesmo local e na mesma data."));
@@ -179,7 +183,8 @@ public class CompeticaoController {
 						 }
 					 }
 				 }
-				 
+				}
+			} 
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
